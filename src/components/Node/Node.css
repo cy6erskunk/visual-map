@@ -1,0 +1,8 @@
+.data-node {
+  border-left: 1px solid #ababab;
+}
+
+.data-node, .object-key-node {
+  margin: 8px 0 8px 24px;
+  padding-left: 4px;
+}
