@@ -1,4 +1,4 @@
-import {getDataTree} from './App'
+import {getDataTree} from './getDataTree'
 
 test('empty array', () => {
   const result = getDataTree([]);

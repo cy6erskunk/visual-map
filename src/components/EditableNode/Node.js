@@ -30,7 +30,7 @@ function getContents(data, level, dispatch) {
     </>)
   }
   else if (data.type === 'var') {
-    contents = (<div>{`VAR<${data.value.substring(1)}>`}</div>)
+    contents = (<div>{`VAR<${data.value}>`}</div>)
   }
   else if (data.type === 'value') {
     contents = (<div>{data.value}</div>)
