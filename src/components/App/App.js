@@ -4,15 +4,13 @@ import { reducer } from './reducer';
 import { getDataTree } from './getDataTree';
 import EditableNode from '../EditableNode/Node';
 
-// const initialData = [
-//   [],
-//   1,
-//   { a: 123, b: [1, 2, 3], c: '$foo', d: {} },
-//   '123',
-//   ['$$foo <- not var'],
-// ];
-
-const initialData = [1, 2];
+const initialData = [
+  [],
+  1,
+  { a: 123, b: [1, 2, 3], c: '$foo', d: {} },
+  '123',
+  ['$$foo <- not var'],
+];
 
 function App() {
   const [state, dispatch] = useReducer(reducer, getDataTree(initialData));

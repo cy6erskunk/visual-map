@@ -1,6 +1,6 @@
 import { nanoid } from 'nanoid';
 
-export function getDataTree(data, parent, hash = {}) {
+export function getDataTree(data, parentId, hash = {}) {
   let result;
   const id = nanoid();
 
@@ -8,7 +8,7 @@ export function getDataTree(data, parent, hash = {}) {
     hash.root = id;
   }
 
-  if (!data && !parent) {
+  if (!data && !parentId) {
     return [undefined, undefined];
   }
 
@@ -17,19 +17,21 @@ export function getDataTree(data, parent, hash = {}) {
       id,
       type: 'array',
       items: [],
-      parent,
-      parentId: parent?.id,
+      parentId,
     };
-    data.forEach((item, index) =>
-      result.items.push({
+    data.forEach((item, index) => {
+      const itemId = nanoid();
+      const [tree, subHash] = getDataTree(data[index], itemId, hash);
+      const newItem = {
+        id: itemId,
         type: 'arrayItem',
         index,
-        parent: result,
-      })
-    );
-    result.items.forEach((item, index) => {
-      const [tree, subHash] = getDataTree(data[index], item, hash);
-      item.value = tree;
+        parentId: id,
+        value: tree,
+      };
+
+      hash[itemId] = newItem;
+      result.items.push(newItem);
       Object.assign(hash, subHash);
     });
   } else if (typeof data === 'object') {
@@ -37,21 +39,22 @@ export function getDataTree(data, parent, hash = {}) {
       id,
       type: 'object',
       items: [],
-      parent,
-      parentId: parent?.id,
+      parentId,
     };
-    Object.keys(data).forEach((objectKey, index) =>
-      result.items.push({
+    Object.keys(data).forEach((objectKey, index) => {
+      const itemId = nanoid();
+      const [tree, subHash] = getDataTree(data[objectKey], itemId, hash);
+      const newItem = {
+        id: itemId,
         type: 'objectItem',
         index,
         key: objectKey,
-        parent: result,
-        parentId: parent?.id,
-      })
-    );
-    result.items.forEach((item, index) => {
-      const [tree, subHash] = getDataTree(data[item.key], item, hash);
-      item.value = tree;
+        parentId: id,
+        value: tree,
+      };
+
+      result.items.push(newItem);
+      hash[itemId] = newItem;
       Object.assign(hash, subHash);
     });
   } else if (typeof data === 'string' && /^\$[^$]/.test(data)) {
@@ -59,16 +62,14 @@ export function getDataTree(data, parent, hash = {}) {
       id,
       type: 'var',
       value: `${data.substring(1)}`,
-      parent,
-      parentId: parent?.id,
+      parentId,
     };
   } else {
     result = {
       id,
       type: 'value',
       value: JSON.stringify(/^\$\$/.test(data) ? data.substring(1) : data),
-      parent,
-      parentId: parent?.id,
+      parentId,
     };
   }
 

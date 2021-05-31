@@ -10,7 +10,7 @@ test('empty', () => {
 test('empty array', () => {
   const [result, hash] = getDataTree([]);
 
-  expect(result.parent).toBeUndefined();
+  expect(result.parentId).toBeUndefined();
   expect(result.items).toEqual([]);
   expect(hash.root).toEqual(result.id);
 });
@@ -20,19 +20,19 @@ test('non-empty array', () => {
 
   const [result, hash] = getDataTree(data);
 
-  expect(result.parent).toBeUndefined();
+  expect(result.parentId).toBeUndefined();
   expect(result.items.length).toEqual(data.length);
   expect(hash.root).toEqual(result.id);
 
   const arrayItem = result.items[0];
 
-  expect(arrayItem.parent).toBe(result);
+  expect(arrayItem.parentId).toBe(result.id);
   expect(arrayItem.index).toBe(0);
 
   const valueItem = arrayItem.value;
 
   expect(valueItem.value).toEqual(String(data[0]));
-  expect(valueItem.parent).toEqual(arrayItem);
+  expect(valueItem.parentId).toEqual(arrayItem.id);
 });
 
 test('non-empty object', () => {
@@ -48,11 +48,11 @@ test('non-empty object', () => {
 
   const keyItem = result.items[0];
 
-  expect(keyItem.parent).toBe(result);
+  expect(keyItem.parentId).toBe(result.id);
   expect(keyItem.key).toBe(key);
 
   const valueItem = keyItem.value;
 
   expect(valueItem.value).toEqual(String(valueItem.value));
-  expect(valueItem.parent).toEqual(keyItem);
+  expect(valueItem.parentId).toEqual(keyItem.id);
 });
