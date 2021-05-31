@@ -4,32 +4,36 @@ function regenerateIndices(array) {
   });
 }
 
-export function reducer(state, action) {
+export const defaultState = [undefined, undefined];
+
+export function reducer(state = defaultState, action) {
+  const [tree, hash] = state;
+  let newHash = Object.assign({}, hash);
   switch (action.type) {
     case 'remove':
-      console.log(action);
-      if (typeof action.data.parent === 'undefined') {
-        return undefined;
+      const element = hash[action.data];
+
+      if (!element) {
+        return [tree, newHash];
       }
-      if (action.data.parent.type === 'arrayItem') {
-        const arrayItem = action.data.parent;
-        arrayItem.parent.items.splice(action.data.parent.index, 1);
+
+      delete newHash[action.data];
+
+      if (typeof element.parent === 'undefined') {
+        return defaultState;
+      }
+
+      if (element.parent.type === 'arrayItem') {
+        const arrayItem = element.parent;
+        arrayItem.parent.items.splice(arrayItem.index, 1);
         regenerateIndices(arrayItem.parent.items);
 
-        let result = action.data;
-        while (result.parent !== undefined) {
-          result = result.parent;
-        }
-        return Object.assign({}, result);
-      } else if (action.data.parent.type === 'objectItem') {
-        action.data.parent.parent.items.splice(action.data.parent.index, 1);
-        regenerateIndices(action.data.parent.parent.items);
+        return [tree, newHash];
+      } else if (element.parent.type === 'objectItem') {
+        element.parent.parent.items.splice(element.parent.index, 1);
+        regenerateIndices(element.parent.parent.items);
 
-        let result = action.data;
-        while (result.parent !== undefined) {
-          result = result.parent;
-        }
-        return Object.assign({}, result);
+        return [tree, newHash];
       }
       break;
     default:

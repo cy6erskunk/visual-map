@@ -56,11 +56,12 @@ function getContents(data, level, dispatch) {
 }
 
 export default function Node({ data, level = 0, dispatch }) {
+  const tree = data;
   return (
     <div className={`data-node level__${level}`}>
-      {getContents(data, level, dispatch)}
+      {getContents(tree, level, dispatch)}
       {level !== 0 ? (
-        <button onClick={() => dispatch({ type: 'remove', data })}>
+        <button onClick={() => dispatch({ type: 'remove', data: tree.id })}>
           {'remove'}
         </button>
       ) : null}

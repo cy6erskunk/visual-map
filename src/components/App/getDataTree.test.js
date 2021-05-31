@@ -1,19 +1,28 @@
 import { getDataTree } from './getDataTree';
 
+test('empty', () => {
+  const [result, hash] = getDataTree();
+
+  expect(result).toBeUndefined();
+  expect(hash).toBeUndefined();
+});
+
 test('empty array', () => {
-  const result = getDataTree([]);
+  const [result, hash] = getDataTree([]);
 
   expect(result.parent).toBeUndefined();
   expect(result.items).toEqual([]);
+  expect(hash.root).toEqual(result.id);
 });
 
 test('non-empty array', () => {
   const data = [1];
 
-  const result = getDataTree(data);
+  const [result, hash] = getDataTree(data);
 
   expect(result.parent).toBeUndefined();
   expect(result.items.length).toEqual(data.length);
+  expect(hash.root).toEqual(result.id);
 
   const arrayItem = result.items[0];
 
@@ -32,9 +41,10 @@ test('non-empty object', () => {
   const data = {};
   data[key] = value;
 
-  const result = getDataTree(data);
+  const [result, hash] = getDataTree(data);
   expect(result.parent).toBeUndefined();
   expect(result.items.length).toEqual(1);
+  expect(hash.root).toEqual(result.id);
 
   const keyItem = result.items[0];
 

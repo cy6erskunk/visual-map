@@ -1,9 +1,12 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import EditableNode from './Node';
 import { getDataTree } from '../App/getDataTree';
 
 test('renders not root node', () => {
-  render(<EditableNode data={getDataTree(1)} />);
+  const data = 1;
+  const [tree] = getDataTree(data);
+
+  render(<EditableNode data={tree} />);
   const element = screen.getByText(/<root>/i);
   expect(element).toBeInTheDocument();
   expect(screen.getByRole('button', { name: /remove/i })).toBeInTheDocument();
@@ -16,23 +19,35 @@ test('renders empty node', () => {
 });
 
 test('renders string value node', () => {
-  render(<EditableNode data={getDataTree('foo')} />);
+  const data = 'foo';
+  const [tree] = getDataTree(data);
+
+  render(<EditableNode data={tree} />);
   expect(screen.getByText('"foo"')).toBeInTheDocument();
 });
 
 test('renders number value node', () => {
-  render(<EditableNode data={getDataTree(123)} />);
+  const data = 123;
+  const [tree] = getDataTree(data);
+
+  render(<EditableNode data={tree} />);
   expect(screen.getByText('123')).toBeInTheDocument();
 });
 
 test('renders array node', () => {
-  render(<EditableNode data={getDataTree([])} />);
+  const data = [];
+  const [tree] = getDataTree(data);
+
+  render(<EditableNode data={tree} />);
   expect(screen.getByText('[')).toBeInTheDocument();
   expect(screen.getByText(']')).toBeInTheDocument();
 });
 
 test('renders array children', () => {
-  render(<EditableNode data={getDataTree([123, [], 'foo'])} />);
+  const data = [123, [], 'foo'];
+  const [tree] = getDataTree(data);
+
+  render(<EditableNode data={tree} />);
   expect(screen.getAllByText('[').length).toBe(2);
   expect(screen.getAllByText(']').length).toBe(2);
   expect(screen.getByText('123')).toBeInTheDocument();
@@ -40,14 +55,19 @@ test('renders array children', () => {
 });
 
 test('renders object node', () => {
-  render(<EditableNode data={getDataTree({ a: [] })} />);
+  const data = { a: [] };
+  const [tree] = getDataTree(data);
+
+  render(<EditableNode data={tree} />);
   expect(screen.getByText('{')).toBeInTheDocument();
   expect(screen.getByText('}')).toBeInTheDocument();
 });
 
 test('renders object keys', () => {
   const data = { a: 123, b: [], c: 'foo', d: {} };
-  render(<EditableNode data={getDataTree(data)} />);
+  const [tree] = getDataTree(data);
+
+  render(<EditableNode data={tree} />);
   expect(screen.getAllByText('{').length).toBe(2);
   expect(screen.getAllByText('}').length).toBe(2);
   expect(screen.getByText('[')).toBeInTheDocument();
@@ -61,12 +81,31 @@ test('renders object keys', () => {
 
 test('renders variable node', () => {
   const variableName = 'index';
-  render(<EditableNode data={getDataTree({ a: `$${variableName}` })} />);
+  const data = { a: `$${variableName}` };
+  const [tree] = getDataTree(data);
+
+  render(<EditableNode data={tree} />);
   expect(screen.getByText(`VAR<${variableName}>`)).toBeInTheDocument();
 });
 
 test('renders value node with $ escaped', () => {
-  const data = '$notAVariableName';
-  render(<EditableNode data={getDataTree(`$${data}`)} />);
-  expect(screen.getByText(`"${data}"`)).toBeInTheDocument();
+  const notAVariableName = '$notAVariableName';
+  const data = `$${notAVariableName}`;
+  const [tree] = getDataTree(data);
+
+  render(<EditableNode data={tree} />);
+  expect(screen.getByText(`"${notAVariableName}"`)).toBeInTheDocument();
+});
+
+test('remove is called', () => {
+  const data = 1;
+  const [tree] = getDataTree(data);
+  const dispatch = jest.fn();
+
+  render(<EditableNode data={tree} dispatch={dispatch} />);
+  fireEvent.click(screen.getByRole('button', { name: /remove/i }));
+  expect(dispatch).toBeCalledWith({
+    type: 'remove',
+    data: tree.id,
+  });
 });
