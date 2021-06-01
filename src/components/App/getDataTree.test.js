@@ -1,35 +1,32 @@
-import { getDataTree } from './getDataTree';
+import { getDataTree, addArrayItem } from './getDataTree';
 
 test('empty', () => {
-  const [result, hash] = getDataTree();
+  const result = getDataTree();
 
   expect(result).toBeUndefined();
-  expect(hash).toBeUndefined();
 });
 
 test('empty array', () => {
-  const [result, hash] = getDataTree([]);
+  const result = getDataTree([]);
 
   expect(result.parentId).toBeUndefined();
-  expect(result.items).toEqual([]);
-  expect(hash.root).toEqual(result.id);
+  expect(result[result.root].items).toEqual([]);
 });
 
 test('non-empty array', () => {
   const data = [1];
 
-  const [result, hash] = getDataTree(data);
+  const result = getDataTree(data);
 
   expect(result.parentId).toBeUndefined();
-  expect(result.items.length).toEqual(data.length);
-  expect(hash.root).toEqual(result.id);
+  expect(result[result.root].items.length).toEqual(data.length);
 
-  const arrayItem = result.items[0];
+  const arrayItem = result[result.root].items[0];
 
-  expect(arrayItem.parentId).toBe(result.id);
-  expect(arrayItem.index).toBe(0);
+  expect(arrayItem.parentId).toBe(result.root);
+  expect(result[arrayItem.id].index).toBe(0);
 
-  const valueItem = arrayItem.value;
+  const valueItem = result[result[arrayItem.id].valueId];
 
   expect(valueItem.value).toEqual(String(data[0]));
   expect(valueItem.parentId).toEqual(arrayItem.id);
@@ -41,18 +38,54 @@ test('non-empty object', () => {
   const data = {};
   data[key] = value;
 
-  const [result, hash] = getDataTree(data);
-  expect(result.parent).toBeUndefined();
-  expect(result.items.length).toEqual(1);
-  expect(hash.root).toEqual(result.id);
+  const result = getDataTree(data);
+  expect(result[result.root].parentId).toBeUndefined();
+  expect(result[result.root].items.length).toEqual(1);
 
-  const keyItem = result.items[0];
+  const keyItem = result[result.root].items[0];
 
-  expect(keyItem.parentId).toBe(result.id);
-  expect(keyItem.key).toBe(key);
+  expect(result[keyItem.id].key).toBe(key);
 
-  const valueItem = keyItem.value;
+  const valueItem = result[keyItem.id];
 
-  expect(valueItem.value).toEqual(String(valueItem.value));
-  expect(valueItem.parentId).toEqual(keyItem.id);
+  expect(result[valueItem.valueId].value).toEqual(String(value));
+  expect(result[valueItem.valueId].parentId).toEqual(keyItem.id);
+});
+
+test('addArrayItem - 1', () => {
+  const result = getDataTree([]);
+  const newResult = addArrayItem(result[result.root], result, 1);
+
+  expect(result.root).toEqual(newResult.root);
+  expect(newResult[newResult.root].items.length).toBe(1);
+  expect(
+    newResult[newResult[newResult[newResult.root].items[0].id].valueId]
+  ).toEqual(
+    expect.objectContaining({
+      type: 'value',
+      value: '1',
+      id: expect.any(String),
+      parentId: expect.any(String),
+    })
+  );
+  expect(Object.keys(newResult).length).toBe(4); // root, array, item, value
+});
+
+test('addArrayItem - [[]]', () => {
+  const result = getDataTree([]);
+  const newResult = addArrayItem(result[result.root], result, []);
+
+  expect(result.root).toEqual(newResult.root);
+  expect(newResult[newResult.root].items.length).toBe(1);
+  expect(
+    newResult[newResult[newResult[newResult.root].items[0].id].valueId]
+  ).toEqual(
+    expect.objectContaining({
+      type: 'array',
+      items: [],
+      id: expect.any(String),
+      parentId: expect.any(String),
+    })
+  );
+  expect(Object.keys(newResult).length).toBe(4); // root, array, item, array
 });

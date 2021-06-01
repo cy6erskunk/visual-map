@@ -19,7 +19,8 @@ function App() {
     <div className="App">
       <header className="App-header">visual map</header>
       <main>
-        <EditableNode data={state[0]} dispatch={dispatch} />
+        <EditableNode data={state} nodeId={state?.root} dispatch={dispatch} />
+        <pre>{JSON.stringify(state, undefined, 2)}</pre>
       </main>
     </div>
   );

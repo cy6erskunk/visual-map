@@ -1,3 +1,5 @@
+import { getDataTree, addArrayItem } from './getDataTree';
+
 function regenerateIndices(array) {
   return array.map((item, index) => {
     item.index = index;
@@ -5,15 +7,38 @@ function regenerateIndices(array) {
   });
 }
 
-export const defaultState = [undefined, undefined];
+export const defaultState = {};
+
+const addTypes = {
+  array: [],
+  object: {},
+};
 
 export function reducer(state = defaultState, action) {
-  const [tree, hash] = state;
-  let newHash = Object.assign({}, hash);
+  let hash = JSON.parse(JSON.stringify(state));
 
   switch (action.type) {
+    case 'add':
+      const parentId = action.data.parentId;
+      const type = action.data.type;
+
+      if (!parentId) {
+        return getDataTree(addTypes[type]);
+      } else {
+        let parent = hash[parentId];
+        if (parent.type === 'array') {
+          if (action.data.length !== parent.items.length) {
+            return state;
+          }
+          hash = addArrayItem(parent, hash, addTypes[type]);
+
+          return hash;
+        } else {
+          throw new Error('unsupported change type');
+        }
+      }
     case 'remove':
-      const element = newHash[action.data];
+      const element = hash[action.data];
 
       if (!element) {
         throw new Error('Element not found');
@@ -23,37 +48,24 @@ export function reducer(state = defaultState, action) {
         return defaultState;
       }
 
-      delete newHash[element.id];
+      delete hash[element.id];
 
       if (
-        newHash[element.parentId].type === 'arrayItem' ||
-        newHash[element.parentId].type === 'objectItem'
+        hash[element.parentId].type === 'arrayItem' ||
+        hash[element.parentId].type === 'objectItem'
       ) {
-        const arrayItemElement = newHash[element.parentId];
-        delete newHash[arrayItemElement.id];
+        const arrayItemElement = hash[element.parentId];
+        const arrayElement = hash[arrayItemElement.parentId];
 
-        const arrayElement = Object.assign(
-          {},
-          newHash[arrayItemElement.parentId]
+        delete hash[arrayItemElement.id];
+
+        arrayElement.items.splice(arrayItemElement.index, 1);
+        arrayElement.items = regenerateIndices(arrayElement.items);
+        arrayElement.items.forEach(
+          (item) => (hash[item.id].index = item.index)
         );
-        newHash[arrayElement.id] = arrayElement;
 
-        let items = arrayElement.items
-          .slice(0)
-          .map((item) => Object.assign({}, item));
-
-        items.splice(arrayItemElement.index, 1);
-        arrayElement.items = regenerateIndices(items);
-        arrayElement.items.forEach((item) => (newHash[item.id] = item));
-
-        if (!arrayElement.parentId) {
-          newHash[newHash.root] = arrayElement;
-          return [arrayElement, newHash];
-        } else {
-          newHash[arrayElement.parentId].value = arrayElement;
-        }
-
-        return [tree, newHash];
+        return hash;
       }
       break;
     default:

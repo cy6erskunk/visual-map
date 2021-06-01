@@ -1,43 +1,80 @@
 import './Node.css';
 
-function getContents(data, level, dispatch) {
+function buttons(dispatch, parentId, length) {
+  return (
+    <>
+      <button
+        onClick={() =>
+          dispatch({
+            type: 'add',
+            data: { type: 'array', parentId, length },
+          })
+        }
+      >
+        {'[]'}
+      </button>
+      <button
+        onClick={() =>
+          dispatch({
+            type: 'add',
+            data: { type: 'object', parentId, length },
+          })
+        }
+      >
+        {'{}'}
+      </button>
+    </>
+  );
+}
+
+function getContents(data, nodeId, level, dispatch) {
   let contents = null;
 
   if (level === 0) {
     contents = (
       <>
         <div>{'<root>'}</div>
-        {data ? (
-          <Node data={data} level={level + 1} dispatch={dispatch} />
-        ) : null}
+        {data && nodeId ? (
+          <Node
+            data={data}
+            nodeId={nodeId}
+            level={level + 1}
+            dispatch={dispatch}
+          />
+        ) : (
+          buttons(dispatch, undefined)
+        )}
       </>
     );
-  } else if (data.type === 'array') {
+  } else if (data[nodeId]?.type === 'array') {
+    const node = data[nodeId];
     contents = (
       <>
         <div>{'['}</div>
-        {data.items.map((item, index) => (
+        {node.items.map((item, index) => (
           <Node
-            parent={data.parent}
             key={`node_${level}_${index}`}
-            data={item.value}
+            data={data}
+            nodeId={data[item.id].valueId}
             level={level + 1}
             dispatch={dispatch}
           />
         ))}
+        {buttons(dispatch, node.id, node.items.length)}
         <div>{']'}</div>
       </>
     );
-  } else if (data.type === 'object') {
+  } else if (data[nodeId]?.type === 'object') {
+    const node = data[nodeId];
     contents = (
       <>
         <div>{'{'}</div>
-        {data.items.map((item, index) => (
+        {node.items.map((item, index) => (
           <div className={`object-key-node`} key={`node_${level}_${index}`}>
-            {`"${item.key}": `}
+            {`"${data[item.id].key}": `}
             <Node
-              parent={data.parent}
-              data={item.value}
+              data={data}
+              nodeId={data[item.id].valueId}
               level={level + 1}
               dispatch={dispatch}
             />
@@ -46,22 +83,27 @@ function getContents(data, level, dispatch) {
         <div>{'}'}</div>
       </>
     );
-  } else if (data.type === 'var') {
-    contents = <div>{`VAR<${data.value}>`}</div>;
-  } else if (data.type === 'value') {
-    contents = <div>{data.value}</div>;
+  } else if (data[nodeId]?.type === 'var') {
+    contents = <div>{`VAR<${data[nodeId].value}>`}</div>;
+  } else if (data[nodeId]?.type === 'value') {
+    contents = <div>{data[nodeId].value}</div>;
+  } else {
+    throw new Error(
+      `Unknown node: ${JSON.stringify(
+        data[nodeId]
+      )} (${nodeId} => ${JSON.stringify(data)})`
+    );
   }
 
   return contents;
 }
 
-export default function Node({ data, level = 0, dispatch }) {
-  const tree = data;
+export default function Node({ data, nodeId, level = 0, dispatch }) {
   return (
     <div className={`data-node level__${level}`}>
-      {getContents(tree, level, dispatch)}
-      {level !== 0 ? (
-        <button onClick={() => dispatch({ type: 'remove', data: tree.id })}>
+      {getContents(data, nodeId, level, dispatch)}
+      {level !== 0 && nodeId ? (
+        <button onClick={() => dispatch({ type: 'remove', data: nodeId })}>
           {'remove'}
         </button>
       ) : null}

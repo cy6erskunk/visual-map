@@ -10,10 +10,9 @@ const initialData = [
 ];
 
 test('remove everything', () => {
-  const state = getDataTree(initialData);
-  const hash = state[1];
+  const hash = getDataTree(initialData);
 
-  const newState = reducer(state, {
+  const newState = reducer(hash, {
     type: 'remove',
     data: hash.root,
   });
@@ -24,42 +23,60 @@ test('remove everything', () => {
 test('remove array item', () => {
   const data = [1];
   const state = getDataTree(data);
-  const [tree] = state;
   const newData = [];
   const expectedState = getDataTree(newData);
-  const [expectedTree, expectedHash] = expectedState;
+  const expectedHash = expectedState;
 
-  const valueId = tree.items[0].value.id;
-
-  const [newTree, newHash] = reducer(state, {
+  const valueId = state[state[state.root].items[0].id].valueId;
+  const newHash = reducer(state, {
     type: 'remove',
     data: valueId,
   });
 
   expect(newHash[valueId]).toBeUndefined();
-  expect(Object.keys(newTree.items).length).toEqual(
-    Object.keys(expectedTree.items).length
-  );
   expect(Object.keys(newHash).length).toEqual(Object.keys(expectedHash).length);
 });
 
 test('remove object item', () => {
   const data = { a: 1 };
   const state = getDataTree(data);
-  const [tree] = state;
   const newData = {};
   const expectedState = getDataTree(newData);
-  const [expectedTree, expectedHash] = expectedState;
 
-  const valueId = tree.items[0].value.id;
+  const valueId = state[state[state.root].items[0].id].valueId;
 
-  const [newTree, newHash] = reducer(state, {
+  const newHash = reducer(state, {
     type: 'remove',
     data: valueId,
   });
 
-  expect(Object.keys(newTree.items).length).toEqual(
-    Object.keys(expectedTree.items).length
+  expect(Object.keys(newHash).length).toEqual(
+    Object.keys(expectedState).length
   );
-  expect(Object.keys(newHash).length).toEqual(Object.keys(expectedHash).length);
+});
+
+test('add arrayItem array', () => {
+  const data = [];
+  const state = getDataTree(data);
+
+  const newState = reducer(state, {
+    type: 'add',
+    data: { type: 'array', parentId: state.root, length: 0 },
+  });
+
+  expect(state.root).toBe(newState.root);
+  expect(Object.keys(newState).length).toBe(4);
+});
+
+test('add arrayItem object', () => {
+  const data = [];
+  const state = getDataTree(data);
+
+  const newState = reducer(state, {
+    type: 'add',
+    data: { type: 'object', parentId: state.root, length: 0 },
+  });
+
+  expect(state.root).toBe(newState.root);
+  expect(Object.keys(newState).length).toBe(4);
 });
